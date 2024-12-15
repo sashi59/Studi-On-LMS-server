@@ -16,8 +16,9 @@ const port = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGO_URI).then(() => { console.log("MongoDb Connected") })
 
 app.use(cors({
-    origin: "https://studi-on-lms-frontend.vercel.app", // Allow frontend URL
-    credentials: true, // If cookies/auth are used
+    origin: ["http://localhost:3000", "https://studi-on-lms-server.onrender.com"],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }))
 
 export const instance = new Razorpay({
