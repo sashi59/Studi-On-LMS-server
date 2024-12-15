@@ -84,71 +84,93 @@ export const getMyCourses = tryCatch(async (req, res) => {
 })
 
 export const checkout = tryCatch(async (req, res) => {
-    const course = await Course.find(req.params.id);
-    const user = await User.find(req.user._id);
+    const course = await Course.findById(req.params.id);
+    const user = await User.findById(req.user._id);
+
+    if (!course) {
+        return res.status(404).json({
+            message: "Course not found",
+        });
+    }
+
+    if (!course.price || isNaN(course.price)) {
+        return res.status(400).json({
+            message: "Invalid course price",
+        });
+    }
 
     if (user?.subscription?.includes(course._id)) {
         return res.status(400).json({
-            message: "You have already subscribed to this course!"
-        })
-
+            message: "You have already subscribed to this course!",
+        });
     }
 
-    const option = {
-        amount: Number(course.price * 100),
+    const options = {
+        amount: Number(course.price) * 100, // Amount in subunits
         currency: "INR",
-        description: "Course Purchase",
-        receipt: "STUDI_ON_LMS",
-    }
-
-    const order = await instance.orders.create(option)
-
-    return res.status(200).json({
+        receipt: `STUDI_ON_LMS_${req.params.id}`,
+      };
+      
+      const order = await instance.orders.create(options);
+      
+      return res.status(200).json({
         order,
-        course
-    })
+        amount: options.amount, // Return amount to frontend
+      });
+      
+});
 
-
-
-})
 
 export const paymentVerification = tryCatch(async (req, res) => {
-    const { razarpay_order_id, razarpay_payment_id, razarpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    const body = razarpay_order_id + "|" + razarpay_payment_id;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
 
     const verifyHashSignature = crypto
-        .createHmac('sha256', process.env.RAZARPAY_SECRET)
+        .createHmac("sha256", process.env.RAZORPAY_SECRET)
         .update(body)
-        .digest('hex');
+        .digest("hex");
 
-    const isAuthentic = razarpay_signature === verifyHashSignature
+    const isAuthentic = razorpay_signature === verifyHashSignature;
 
     if (isAuthentic) {
+        // Create a payment entry
         await Payment.create({
-            razarpay_order_id,
-            razarpay_payment_id,
-            razarpay_signature
-
-        })
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+        });
 
         const user = await User.findById(req.user._id);
+        const course = await Course.findById(req.params.id);
 
-        user.subscription.push(req.params.id);
+        if (!user || !course) {
+            return res.status(404).json({
+                message: "User or Course not found",
+            });
+        }
+
+        // Ensure the subscription array exists
+        if (!Array.isArray(user.subscription)) {
+            user.subscription = [];
+        }
+
+        // Add course to user's subscriptions
+        if (!user.subscription.includes(course._id)) {
+            user.subscription.push(course._id);
+        }
+
+        // Save the updated user document
         await user.save();
 
         return res.status(200).json({
             message: "Course Purchased successfully",
             user,
-        })
-
+            course,
+        });
     } else {
         return res.status(401).json({
-            message: "Payment verification failed"
-        })
+            message: "Payment verification failed",
+        });
     }
-
-
-
-
-})
+});

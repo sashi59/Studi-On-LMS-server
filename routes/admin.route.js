@@ -1,5 +1,5 @@
 import express from 'express';
-import { addLecturesToCourse, createNewCourse, deleteCourse, deleteLecture, getAllStats, getAllUsers } from '../controllers/admin.controller.js';
+import { addLecturesToCourse, createNewCourse, deleteCourse, deleteLecture, getAllStats, getAllUsers, updateRole } from '../controllers/admin.controller.js';
 import { ProtectedRoute } from '../middlewares/isAuth.js';
 import { isAdmin } from '../middlewares/isAdmin.js';
 
@@ -17,7 +17,7 @@ router.delete("/course/:id", ProtectedRoute, isAdmin, deleteCourse)
 router.get("/stats", ProtectedRoute, isAdmin, getAllStats)
 router.get("/all-users", ProtectedRoute, isAdmin, getAllUsers);
 
-// router.post("/user/:id", ProtectedRoute, isAdmin, updateRole)
+router.post("/user/:id", ProtectedRoute, isAdmin, updateRole)
 
 
 

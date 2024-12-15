@@ -131,6 +131,23 @@ export const getAllUsers = tryCatch(async (req, res)=>{
 
 })
 
-// export const updateRole = tryCatch(async (req, res)=>{
-//     const user = await User.findByIdAndUpdate(req.params.id, {role: req.body.role}, {new: true});
-// })
+export const updateRole = tryCatch(async (req, res)=>{
+    const user = await User.findById(req.params.id);
+
+    if(user.role === 'admin'){
+        user.role = "user";
+        await user.save();
+    }else if(user.role === "user"){
+        user.role = "admin";
+        await user.save();
+    }else{
+        return res.status(400).json({
+            message: "Invalid role",
+        })
+    }
+
+    return res.status(200).json({
+        message: "Role updated successfully",
+        user,
+    })
+})

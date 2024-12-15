@@ -19,10 +19,10 @@ const userSchema = new mongoose.Schema({
         enum: ["user", "admin"],
         default: "user"
     },
-    subscription:{
+    subscription: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course"
-    }
+        ref: "Course",
+    }]
 }, {
     timestamps: true,
 })
