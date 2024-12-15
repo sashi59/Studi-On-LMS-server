@@ -13,9 +13,12 @@ dotenv.config();
 
 
 const port = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGO_URI).then(()=>{console.log("MongoDb Connected")})
+mongoose.connect(process.env.MONGO_URI).then(() => { console.log("MongoDb Connected") })
 
-app.use(cors())
+app.use(cors({
+    origin: "https://studi-on-lms-frontend.vercel.app", // Allow frontend URL
+    credentials: true, // If cookies/auth are used
+}))
 
 export const instance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
@@ -31,6 +34,6 @@ app.use('/api/course', courseRoute);
 app.use('/api/admin', adminRoute);
 
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Server is listening on port: ${port}`)
 })
